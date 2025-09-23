@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>PVZ Sandbox</title>
+  <style>
+    body { margin:0; overflow:hidden; background:black; }
+    #seedbank {
+      position:absolute; top:0; left:0;
+      width:150px; height:600px;
+      background:black; padding:10px;
+      display:grid; grid-template-columns: repeat(2, 64px);
+      grid-auto-rows: 64px;
+      gap:6px;
+    }
+    #seedbank img {
+      width:64px; height:64px; cursor:pointer;
+      border:2px solid transparent; background:#222;
+    }
+    #seedbank img.selected { border-color:yellow; }
+    canvas { position:absolute; left:150px; top:0; }
+
+/* --- warning screen styles --- */
+#warning {
+  position:fixed;
+  top:0; left:0; right:0; bottom:0;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  z-index:9999;
+  font-family:sans-serif;
+}
+#warning .warning-bg {
+  position:absolute;
+  top:0; left:0; right:0; bottom:0;
+  width:100%; height:100%;
+  object-fit:cover;
+  filter: blur(6px);
+}
+#warning .warning-text {
+  position:relative; /* sits above blurred image */
+  color:white;
+  background: rgba(0,0,0,0.6);
+  padding:20px 40px;
+  border-radius:12px;
+  max-width:700px;
+  text-align:center;
+}
+#warning h1 {
+  font-size:2em;
+  color:red;
+  margin-bottom:10px;
+}
+#warning p {
+  font-size:1.2em;
+  line-height:1.5em;
+}
+
+  </style>
+</head>
+<body>
+ <!-- warning overlay -->
+  <div id="warning">
+    <img src="./loadingScreen_boot.png" class="warning-bg">
+    <div class="warning-text">
+      <h1>WARNING</h1>
+      <p>
+        THIS FANGAME USES LEAKED PVZ3 ASSETS.<br>
+        PVZ IS OWNED BY EA, POPCAP, AND SLINGSHOT.<br>
+        THIS PROJECT IS SOLELY FOR PASSION,<br>
+        NO PROFIT IS BEING MADE.
+      </p>
+      <p><em>Click anywhere or press any key to continue...</em></p>
+    </div>
+  </div>
+
+  <div id="seedbank"></div>
+  <canvas id="game" width="850" height="600"></canvas>
+  <audio id="bgm" src="./bgm_loop.mp3" loop muted></audio>
+
+  <script>
+  // Hide warning screen on first click/keypress
+  function dismissWarning() {
+    const warn = document.getElementById("warning");
+    if(warn){
+      warn.style.display="none";
+      document.removeEventListener("click", dismissWarning);
+      document.removeEventListener("keydown", dismissWarning);
+    }
+  }
+  document.addEventListener("click", dismissWarning);
+  document.addEventListener("keydown", dismissWarning);
+
+  const ctx = document.getElementById("game").getContext("2d");
+  const bgm = document.getElementById("bgm");
+  document.addEventListener("click", () => { bgm.muted=false; bgm.play(); }, { once:true });
+
+  function load(src){ const i=new Image(); i.src=src; return i; }
+
+  // all images
+  const imgs = {
+    bg: load("./background.png"),
+    peaShooter: load("./pea.png"),
+    bonk: load("./bonk.png"),
+    bop: load("./bop.png"),
+    mine: load("./mine.png"),
+    lob: load("./lob.png"),
+    yukon: load("./yukon.png"),
+
+    zombie: load("./zombie.png"),
+    cone: load("./cone.png"),
+    bucket: load("./bucket.png"),
+
+    pea: load("./pea_proj.png"),
+    lobProj: load("./lob_proj.png"),
+    sun: load("./sun.png"),
+    boom: load("./boom.png"),
+
+    peaShooter_packet: load("./peaShooter_packet.png"),
+    bonk_packet: load("./bonk_packet.png"),
+    bop_packet: load("./bop_packet.png"),
+    mine_packet: load("./mine_packet.png"),
+    lob_packet: load("./lob_packet.png"),
+    yukon_packet: load("./yukon_packet.png"),
+    zombie_packet: load("./zombie_packet.png"),
+    cone_packet: load("./cone_packet.png"),
+    bucket_packet: load("./bucket_packet.png"),
+    delete_packet: load("./delete_packet.png")
+  };
+
+  const seeds = [
+    {type:"peaShooter", packet:"peaShooter_packet"},
+    {type:"bonk", packet:"bonk_packet"},
+    {type:"bop", packet:"bop_packet"},
+    {type:"mine", packet:"mine_packet"},
+    {type:"lob", packet:"lob_packet"},
+    {type:"yukon", packet:"yukon_packet"},
+    {type:"zombie", packet:"zombie_packet"},
+    {type:"cone", packet:"cone_packet"},
+    {type:"bucket", packet:"bucket_packet"},
+    {type:"delete", packet:"delete_packet"}
+  ];
+
+  let selected=null;
+  const ui=document.getElementById("seedbank");
+  seeds.forEach(seed=>{
+    const img=document.createElement("img");
+    img.src=imgs[seed.packet].src;
+    img.onclick=()=>{
+      [...ui.children].forEach(c=>c.classList.remove("selected"));
+      img.classList.add("selected");
+      selected=seed.type;
+    };
+    ui.appendChild(img);
+  });
+
+  let entities=[];
+
+  function spawn(type,x,y){
+    const e={type,x,y,hp:100,t:0,armed:false,vy:0};
+    if(type==="cone") e.hp=250;
+    if(type==="bucket") e.hp=600;
+    if(type==="bonk") e.hp=300;
+    if(type==="bop") e.hp=150;
+    entities.push(e);
+  }
+
+  document.getElementById("game").addEventListener("click", e=>{
+    const rect=e.target.getBoundingClientRect();
+    const x=e.clientX-rect.left, y=e.clientY-rect.top;
+    if(!selected) return;
+    if(selected==="delete"){
+      entities=entities.filter(en=>Math.hypot(en.x-x,en.y-y)>40);
+    } else {
+      spawn(selected,x,y);
+    }
+  });
+
+  // ---------- game loop ----------
+  function update(dt){
+    for(const e of entities){
+      e.t += dt;
+
+      // projectiles
+      if(e.type==="pea"){
+        e.x += 200*dt;
+        for(const z of entities.filter(z=>["zombie","cone","bucket"].includes(z.type))){
+          if(!z.dead && Math.abs(z.x - e.x) < 20 && Math.abs(z.y - e.y) < 25){
+            z.hp -= 50;
+            e.dead = true;
+          }
+        }
+        if(e.x > 850) e.dead = true;
+      }
+
+      if(e.type==="lobProj"){
+        e.x += 150*dt;
+        e.y += e.vy*dt;
+        e.vy += -400*dt;
+        if(e.y > 550){
+          spawn("boom", e.x, 550);
+          e.dead = true;
+        }
+        for(const z of entities.filter(z=>["zombie","cone","bucket"].includes(z.type))){
+          if(!z.dead && Math.abs(z.x - e.x) < 30 && Math.abs(z.y - e.y) < 40){
+            spawn("boom", e.x, e.y);
+            z.hp -= 150;
+            e.dead = true;
+          }
+        }
+      }
+
+      // zombies
+      if(["zombie","cone","bucket"].includes(e.type)){
+        let collidingPlant = entities.find(p =>
+          ["peaShooter","bonk","bop","mine","lob","yukon"].includes(p.type) &&
+          !p.dead && Math.abs(p.x - e.x) < 35 && Math.abs(p.y - e.y) < 40
+        );
+
+        if(collidingPlant){
+          if((collidingPlant.type==="mine" || collidingPlant.type==="yukon") && collidingPlant.armed){
+            collidingPlant.dead = true;
+            spawn("boom", collidingPlant.x, collidingPlant.y);
+
+            // AoE damage
+            for(const z2 of entities.filter(z2=>["zombie","cone","bucket"].includes(z2.type))){
+              if(Math.hypot(z2.x - collidingPlant.x, z2.y - collidingPlant.y) < 80){
+                z2.hp = 0;
+              }
+            }
+            e.hp = 0; // zombie killed
+          } else {
+            e.eating = true;
+            collidingPlant.hp -= 20*dt;
+            if(collidingPlant.hp <= 0) collidingPlant.dead = true;
+          }
+        } else {
+          e.eating = false;
+          e.x -= (e.type==="zombie"?30:(e.type==="cone"?28:25)) * dt;
+        }
+
+        if(e.hp <= 0) e.dead = true;
+      }
+
+      // mines (instant arm, yukon sun)
+      if(["mine","yukon"].includes(e.type)){
+        e.armed = true;
+        if(e.type==="yukon" && e.t > 15){
+          e.t = 0;
+          spawn("sun", e.x, e.y-40);
+        }
+      }
+
+      // peashooter
+      if(e.type==="peaShooter"){
+        const hasZombieInLane = entities.some(z =>
+          ["zombie","cone","bucket"].includes(z.type) &&
+          !z.dead && Math.abs(z.y - e.y) < 30
+        );
+        if(hasZombieInLane && e.t > 2){
+          e.t = 0;
+          spawn("pea", e.x+20, e.y);
+        }
+      }
+
+      // lob
+      if(e.type==="lob"){
+        const hasZombieInLane = entities.some(z =>
+          ["zombie","cone","bucket"].includes(z.type) &&
+          !z.dead && Math.abs(z.y - e.y) < 30
+        );
+        if(hasZombieInLane && e.t > 3){
+          e.t = 0;
+          entities.push({type:"lobProj", x:e.x, y:e.y, vy:250, t:0});
+        }
+      }
+
+      // bonk choy
+      if(e.type==="bonk" && e.t > 1){
+        e.t = 0;
+        for(const z of entities.filter(z=>["zombie","cone","bucket"].includes(z.type))){
+          if(!z.dead && Math.abs(z.x - e.x) < 50 && Math.abs(z.y - e.y) < 30){
+            z.hp -= 100;
+          }
+        }
+      }
+
+      // bop choy
+      if(e.type==="bop" && e.t > 1.5){
+        e.t = 0;
+        for(const z of entities.filter(z=>["zombie","cone","bucket"].includes(z.type))){
+          if(!z.dead && Math.abs(z.x - e.x) < 40 && Math.abs(z.y - e.y) < 25){
+            z.hp -= 50;
+          }
+        }
+      }
+    }
+
+    // explosions
+    for(const boom of entities.filter(e=>e.type==="boom")){
+      for(const z of entities.filter(z=>["zombie","cone","bucket"].includes(z.type))){
+        if(!z.dead && Math.hypot(z.x - boom.x, z.y - boom.y) < 80){
+          z.hp -= 999;
+        }
+      }
+      boom.t += dt;
+      if(boom.t > 0.5) boom.dead = true;
+    }
+
+    entities = entities.filter(e=>!e.dead);
+  }
+
+  function draw(){
+    ctx.drawImage(imgs.bg,0,0,2048,1024,0,0,850,600);
+    for(const e of entities){
+      const img = imgs[e.type];
+      if(img && img.complete && img.naturalWidth !== 0){
+        if(["zombie","cone","bucket"].includes(e.type)){
+          ctx.drawImage(img,e.x-32,e.y-48,64,96);
+        } else if(e.type==="bop"){
+          ctx.drawImage(img,e.x-24,e.y-24,48,48);
+        } else {
+          ctx.drawImage(img,e.x-32,e.y-32,64,64);
+        }
+      } else {
+        ctx.fillStyle="red";
+        ctx.fillRect(e.x-10,e.y-10,20,20);
+      }
+    }
+  }
+
+  let last=0;
+  function loop(ts){
+    const dt=(ts-last)/1000; last=ts;
+    update(dt);
+    draw();
+    requestAnimationFrame(loop);
+  }
+  requestAnimationFrame(loop);
+  </script>
+</body>
+</html>
