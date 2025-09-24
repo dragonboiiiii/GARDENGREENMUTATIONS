@@ -20,46 +20,51 @@
     #seedbank img.selected { border-color:yellow; }
     canvas { position:absolute; left:150px; top:0; }
 
-/* --- warning screen styles --- */
-#warning {
-  position:fixed;
-  top:0; left:0; right:0; bottom:0;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  z-index:9999;
-  font-family:sans-serif;
-}
-#warning .warning-bg {
-  position:absolute;
-  top:0; left:0; right:0; bottom:0;
-  width:100%; height:100%;
-  object-fit:cover;
-  filter: blur(6px);
-}
-#warning .warning-text {
-  position:relative; /* sits above blurred image */
-  color:white;
-  background: rgba(0,0,0,0.6);
-  padding:20px 40px;
-  border-radius:12px;
-  max-width:700px;
-  text-align:center;
-}
-#warning h1 {
-  font-size:2em;
-  color:red;
-  margin-bottom:10px;
-}
-#warning p {
-  font-size:1.2em;
-  line-height:1.5em;
-}
-
+    /* --- warning screen styles --- */
+    #warning {
+      position:fixed;
+      top:0; left:0; right:0; bottom:0;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      z-index:9999;
+      font-family:sans-serif;
+      opacity:1;
+      transition: opacity 1s ease; /* fade effect */
+    }
+    #warning.fade-out {
+      opacity:0;
+      pointer-events:none;
+    }
+    #warning .warning-bg {
+      position:absolute;
+      top:0; left:0; right:0; bottom:0;
+      width:100%; height:100%;
+      object-fit:cover;
+      filter: blur(6px);
+    }
+    #warning .warning-text {
+      position:relative;
+      color:white;
+      background: rgba(0,0,0,0.6);
+      padding:20px 40px;
+      border-radius:12px;
+      max-width:700px;
+      text-align:center;
+    }
+    #warning h1 {
+      font-size:2em;
+      color:red;
+      margin-bottom:10px;
+    }
+    #warning p {
+      font-size:1.2em;
+      line-height:1.5em;
+    }
   </style>
 </head>
 <body>
- <!-- warning overlay -->
+  <!-- Warning overlay -->
   <div id="warning">
     <img src="./loadingScreen_boot.png" class="warning-bg">
     <div class="warning-text">
@@ -74,16 +79,21 @@
     </div>
   </div>
 
+  <button id="changeScene" style="position:absolute;top:10px;right:10px;z-index:1000;">
+    Change Scene
+  </button>
+
   <div id="seedbank"></div>
   <canvas id="game" width="850" height="600"></canvas>
   <audio id="bgm" src="./bgm_loop.mp3" loop muted></audio>
 
   <script>
-  // Hide warning screen on first click/keypress
+  // Dismiss warning screen with fade-out
   function dismissWarning() {
     const warn = document.getElementById("warning");
     if(warn){
-      warn.style.display="none";
+      warn.classList.add("fade-out");
+      setTimeout(()=> warn.style.display="none", 1000);
       document.removeEventListener("click", dismissWarning);
       document.removeEventListener("keydown", dismissWarning);
     }
@@ -97,19 +107,29 @@
 
   function load(src){ const i=new Image(); i.src=src; return i; }
 
-  // all images
+  // images
   const imgs = {
     bg: load("./background.png"),
+    bg2: load("./background2.png"),
+
     peaShooter: load("./pea.png"),
-    bonk: load("./bonk.png"),
+    solarpea: load("./solarpea.png"),
+    beatchoy: load("./beatchoy.png"),
+    bonkchoy: load("./bonkchoy.png"),
+    cabbarage: load("./cabbarage.png"),
     bop: load("./bop.png"),
     mine: load("./mine.png"),
+    bombtater: load("./bombtater.png"),
     lob: load("./lob.png"),
     yukon: load("./yukon.png"),
+    wallnut: load("./wallnut.png"),
+    hazelnut: load("./hazelnut.png"),
+    sunflower: load("./sunflower.png"),
 
     zombie: load("./zombie.png"),
     cone: load("./cone.png"),
     bucket: load("./bucket.png"),
+    imp: load("./imp.png"),
 
     pea: load("./pea_proj.png"),
     lobProj: load("./lob_proj.png"),
@@ -117,27 +137,43 @@
     boom: load("./boom.png"),
 
     peaShooter_packet: load("./peaShooter_packet.png"),
-    bonk_packet: load("./bonk_packet.png"),
+    solarpea_packet: load("./solarpea_packet.png"),
+    beatchoy_packet: load("./beatchoy_packet.png"),
+    bonkchoy_packet: load("./bonkchoy_packet.png"),
+    cabbarage_packet: load("./cabbarage_packet.png"),
     bop_packet: load("./bop_packet.png"),
     mine_packet: load("./mine_packet.png"),
+    bombtater_packet: load("./bombtater_packet.png"),
     lob_packet: load("./lob_packet.png"),
     yukon_packet: load("./yukon_packet.png"),
+    wallnut_packet: load("./wallnut_packet.png"),
+    hazelnut_packet: load("./hazelnut_packet.png"),
+    sunflower_packet: load("./sunflower_packet.png"),
     zombie_packet: load("./zombie_packet.png"),
     cone_packet: load("./cone_packet.png"),
     bucket_packet: load("./bucket_packet.png"),
+    imp_packet: load("./imp_packet.png"),
     delete_packet: load("./delete_packet.png")
   };
 
   const seeds = [
     {type:"peaShooter", packet:"peaShooter_packet"},
-    {type:"bonk", packet:"bonk_packet"},
+    {type:"solarpea", packet:"solarpea_packet"},
+    {type:"beatchoy", packet:"beatchoy_packet"},
+    {type:"bonkchoy", packet:"bonkchoy_packet"},
+    {type:"cabbarage", packet:"cabbarage_packet"},
     {type:"bop", packet:"bop_packet"},
     {type:"mine", packet:"mine_packet"},
+    {type:"bombtater", packet:"bombtater_packet"},
     {type:"lob", packet:"lob_packet"},
     {type:"yukon", packet:"yukon_packet"},
+    {type:"wallnut", packet:"wallnut_packet"},
+    {type:"hazelnut", packet:"hazelnut_packet"},
+    {type:"sunflower", packet:"sunflower_packet"},
     {type:"zombie", packet:"zombie_packet"},
     {type:"cone", packet:"cone_packet"},
     {type:"bucket", packet:"bucket_packet"},
+    {type:"imp", packet:"imp_packet"},
     {type:"delete", packet:"delete_packet"}
   ];
 
@@ -155,13 +191,25 @@
   });
 
   let entities=[];
+  let currentBg="bg";
+  document.getElementById("changeScene").onclick=()=>{
+    currentBg = currentBg==="bg" ? "bg2" : "bg";
+  };
 
   function spawn(type,x,y){
     const e={type,x,y,hp:100,t:0,armed:false,vy:0};
     if(type==="cone") e.hp=250;
     if(type==="bucket") e.hp=600;
-    if(type==="bonk") e.hp=300;
+    if(type==="beatchoy") e.hp=400;
+    if(type==="bonkchoy") e.hp=250;
+    if(type==="cabbarage") e.hp=500;
     if(type==="bop") e.hp=150;
+    if(type==="wallnut") e.hp=1200;
+    if(type==="hazelnut") e.hp=600;
+    if(type==="solarpea") e.hp=300;
+    if(type==="sunflower") e.hp=300;
+    if(type==="bombtater"){ e.hp=150; e.armed=true; e.uses=3; }
+    if(type==="imp"){ e.hp=80; e.speed=60; }
     entities.push(e);
   }
 
@@ -172,6 +220,7 @@
     if(selected==="delete"){
       entities=entities.filter(en=>Math.hypot(en.x-x,en.y-y)>40);
     } else {
+      if(selected==="hazelnut" && currentBg!=="bg2") return;
       spawn(selected,x,y);
     }
   });
@@ -184,7 +233,7 @@
       // projectiles
       if(e.type==="pea"){
         e.x += 200*dt;
-        for(const z of entities.filter(z=>["zombie","cone","bucket"].includes(z.type))){
+        for(const z of entities.filter(z=>["zombie","cone","bucket","imp"].includes(z.type))){
           if(!z.dead && Math.abs(z.x - e.x) < 20 && Math.abs(z.y - e.y) < 25){
             z.hp -= 50;
             e.dead = true;
@@ -201,7 +250,7 @@
           spawn("boom", e.x, 550);
           e.dead = true;
         }
-        for(const z of entities.filter(z=>["zombie","cone","bucket"].includes(z.type))){
+        for(const z of entities.filter(z=>["zombie","cone","bucket","imp"].includes(z.type))){
           if(!z.dead && Math.abs(z.x - e.x) < 30 && Math.abs(z.y - e.y) < 40){
             spawn("boom", e.x, e.y);
             z.hp -= 150;
@@ -211,9 +260,9 @@
       }
 
       // zombies
-      if(["zombie","cone","bucket"].includes(e.type)){
+      if(["zombie","cone","bucket","imp"].includes(e.type)){
         let collidingPlant = entities.find(p =>
-          ["peaShooter","bonk","bop","mine","lob","yukon"].includes(p.type) &&
+          ["peaShooter","solarpea","beatchoy","bonkchoy","cabbarage","bop","mine","bombtater","lob","yukon","wallnut","hazelnut","sunflower"].includes(p.type) &&
           !p.dead && Math.abs(p.x - e.x) < 35 && Math.abs(p.y - e.y) < 40
         );
 
@@ -221,14 +270,17 @@
           if((collidingPlant.type==="mine" || collidingPlant.type==="yukon") && collidingPlant.armed){
             collidingPlant.dead = true;
             spawn("boom", collidingPlant.x, collidingPlant.y);
-
-            // AoE damage
-            for(const z2 of entities.filter(z2=>["zombie","cone","bucket"].includes(z2.type))){
+            for(const z2 of entities.filter(z2=>["zombie","cone","bucket","imp"].includes(z2.type))){
               if(Math.hypot(z2.x - collidingPlant.x, z2.y - collidingPlant.y) < 80){
                 z2.hp = 0;
               }
             }
-            e.hp = 0; // zombie killed
+            e.hp = 0;
+          } else if(collidingPlant.type==="bombtater" && collidingPlant.armed){
+            spawn("boom", collidingPlant.x, collidingPlant.y);
+            e.hp=0;
+            collidingPlant.uses -= 1;
+            if(collidingPlant.uses<=0) collidingPlant.dead=true;
           } else {
             e.eating = true;
             collidingPlant.hp -= 20*dt;
@@ -236,7 +288,7 @@
           }
         } else {
           e.eating = false;
-          e.x -= (e.type==="zombie"?30:(e.type==="cone"?28:25)) * dt;
+          e.x -= (e.type==="imp"? e.speed : (e.type==="zombie"?30:(e.type==="cone"?28:25))) * dt;
         }
 
         if(e.hp <= 0) e.dead = true;
@@ -251,46 +303,73 @@
         }
       }
 
-      // peashooter
-      if(e.type==="peaShooter"){
+      // sunflower
+      if(e.type==="sunflower" && e.t > 10){
+        e.t=0;
+        spawn("sun", e.x, e.y-40);
+      }
+
+      // solar pea
+      if(e.type==="solarpea"){
         const hasZombieInLane = entities.some(z =>
-          ["zombie","cone","bucket"].includes(z.type) &&
+          ["zombie","cone","bucket","imp"].includes(z.type) &&
           !z.dead && Math.abs(z.y - e.y) < 30
         );
         if(hasZombieInLane && e.t > 2){
-          e.t = 0;
+          e.t=0;
           spawn("pea", e.x+20, e.y);
+          spawn("sun", e.x, e.y-40);
         }
       }
 
-      // lob
-      if(e.type==="lob"){
-        const hasZombieInLane = entities.some(z =>
-          ["zombie","cone","bucket"].includes(z.type) &&
-          !z.dead && Math.abs(z.y - e.y) < 30
-        );
-        if(hasZombieInLane && e.t > 3){
-          e.t = 0;
-          entities.push({type:"lobProj", x:e.x, y:e.y, vy:250, t:0});
-        }
-      }
-
-      // bonk choy
-      if(e.type==="bonk" && e.t > 1){
-        e.t = 0;
-        for(const z of entities.filter(z=>["zombie","cone","bucket"].includes(z.type))){
-          if(!z.dead && Math.abs(z.x - e.x) < 50 && Math.abs(z.y - e.y) < 30){
-            z.hp -= 100;
+      // beatchoy
+      if(e.type==="beatchoy" && e.t > 1){
+        e.t=0;
+        for(const z of entities.filter(z=>["zombie","cone","bucket","imp"].includes(z.type))){
+          if(!z.dead && Math.abs(z.x - e.x) < 55 && Math.abs(z.y - e.y) < 30){
+            z.hp -= 120;
           }
         }
       }
 
-      // bop choy
+      // bonkchoy
+      if(e.type==="bonkchoy" && e.t > 1){
+        e.t=0;
+        for(const z of entities.filter(z=>["zombie","cone","bucket","imp"].includes(z.type))){
+          if(!z.dead && Math.abs(z.x - e.x) < 50 && Math.abs(z.y - e.y) < 30){
+            z.hp -= 80;
+          }
+        }
+      }
+
+      // cabbarage
+      if(e.type==="cabbarage" && e.t > 1){
+        e.t=0;
+        for(const z of entities.filter(z=>["zombie","cone","bucket","imp"].includes(z.type))){
+          if(!z.dead && Math.abs(z.x - e.x) < 60 && Math.abs(z.y - e.y) < 35){
+            z.hp -= 150;
+          }
+        }
+      }
+
+      // bop
       if(e.type==="bop" && e.t > 1.5){
         e.t = 0;
-        for(const z of entities.filter(z=>["zombie","cone","bucket"].includes(z.type))){
+        for(const z of entities.filter(z=>["zombie","cone","bucket","imp"].includes(z.type))){
           if(!z.dead && Math.abs(z.x - e.x) < 40 && Math.abs(z.y - e.y) < 25){
             z.hp -= 50;
+          }
+        }
+      }
+
+      // bombtater (extra check)
+      if(e.type==="bombtater"){
+        for(const z of entities.filter(z=>["zombie","cone","bucket","imp"].includes(z.type))){
+          if(!z.dead && Math.abs(z.x - e.x) < 30 && Math.abs(z.y - e.y) < 30){
+            spawn("boom", e.x, e.y);
+            z.hp=0;
+            e.uses -= 1;
+            if(e.uses<=0) e.dead=true;
           }
         }
       }
@@ -298,7 +377,7 @@
 
     // explosions
     for(const boom of entities.filter(e=>e.type==="boom")){
-      for(const z of entities.filter(z=>["zombie","cone","bucket"].includes(z.type))){
+      for(const z of entities.filter(z=>["zombie","cone","bucket","imp"].includes(z.type))){
         if(!z.dead && Math.hypot(z.x - boom.x, z.y - boom.y) < 80){
           z.hp -= 999;
         }
@@ -311,12 +390,14 @@
   }
 
   function draw(){
-    ctx.drawImage(imgs.bg,0,0,2048,1024,0,0,850,600);
+    ctx.drawImage(imgs[currentBg],0,0,2048,1024,0,0,850,600);
     for(const e of entities){
       const img = imgs[e.type];
       if(img && img.complete && img.naturalWidth !== 0){
         if(["zombie","cone","bucket"].includes(e.type)){
           ctx.drawImage(img,e.x-32,e.y-48,64,96);
+        } else if(e.type==="imp"){
+          ctx.drawImage(img,e.x-20,e.y-20,40,40);
         } else if(e.type==="bop"){
           ctx.drawImage(img,e.x-24,e.y-24,48,48);
         } else {
