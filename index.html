@@ -1,69 +1,76 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
   <meta charset="UTF-8">
   <title>Garden Greens Mutated - Warning</title>
   <style>
-    body { margin:0; overflow:hidden; background:black; font-family:sans-serif; }
+    body, html {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: Arial, sans-serif;
+      background: url("loadingScreen_boot.png") no-repeat center center fixed;
+      background-size: cover;
+    }
     #warning {
-      position:fixed; top:0; left:0; right:0; bottom:0;
-      display:flex; align-items:center; justify-content:center;
-      z-index:9999; opacity:1;
-      transition: opacity 1s ease;
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-size: 20px;
+      text-align: center;
+      background: rgba(0,0,0,0.6);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
     }
-    #warning.fade-out { opacity:0; pointer-events:none; }
-    #warning .warning-bg {
-      position:absolute; top:0; left:0; right:0; bottom:0;
-      width:100%; height:100%; object-fit:cover; filter: blur(6px);
+    #warning img {
+      width: 64px;
+      height: 64px;
+      margin-bottom: 20px;
     }
-    #warning .warning-text {
-      position:relative; color:white; background: rgba(0,0,0,0.6);
-      padding:20px 40px; border-radius:12px; max-width:700px; text-align:center;
-    }
-    #warning h1 { font-size:2em; color:red; margin-bottom:10px; }
-    #warning p { font-size:1.2em; line-height:1.5em; }
-
-    /* Loading + fun fact */
-    #loading {
-      margin-top:20px;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      gap:15px;
-    }
-    #loading img {
-      width:64px;
-      height:64px;
-    }
-    #loading p {
-      font-size:1em;
-      color:#ccc;
-      max-width:400px;
-      text-align:left;
+    #warning.fade-out {
+      opacity: 0;
+      transition: opacity 1.5s ease-out;
     }
   </style>
 </head>
 <body>
   <div id="warning">
-    <img src="./loadingScreen_boot.png" class="warning-bg">
-    <div class="warning-text">
-      <h1>WARNING</h1>
-      <p>
-        THIS FANGAME USES LEAKED ASSETS.<br>
-        “GARDEN GREENS MUTATED” IS A FAN PROJECT,<br>
-        MADE FOR PASSION ONLY, WITH ZERO PROFIT.<br>
-      </p>
-      <p><em>Redirecting to game...</em></p>
-
-      <!-- Loading spinner + fun fact -->
-      <div id="loading">
-        <img src="./loading.gif" alt="Loading...">
-        <p id="funfact"></p>
-      </div>
-    </div>
+    <img src="loading.gif" alt="Loading...">
+    <p><strong>WARNING:</strong><br>
+    THIS FANGAME USES LEAKED PVZ3 ASSETS.<br>
+    PVZ IS OWNED BY EA, POPCAP AND SLINGSHOT.<br>
+    THIS PROJECT IS SOLELY FOR PASSION, NO PROFIT IS BEING MADE.</p>
+    <p id="funfact"></p>
   </div>
 
+  <!-- 🔊 loading sound -->
+  <audio id="loadsound" src="./loading.wav" autoplay></audio>
+
   <script>
+    // ensure sound starts once the page is ready
+    window.addEventListener("load", () => {
+      const loadSound = document.getElementById("loadsound");
+      loadSound.volume = 1.0;
+      loadSound.play().catch(() => {
+        // if autoplay blocked, play after first click anywhere
+        document.body.addEventListener("click", () => {
+          loadSound.play();
+        }, { once: true });
+      });
+    });
+
     const facts = [
       "Fun Fact: Solar Pea shoots peas that also generate sunlight!",
       "Fun Fact: Bombtater can explode multiple times before vanishing.",
@@ -72,11 +79,11 @@
       "Fun Fact: Garden Greens Mutated started as a sandbox fangame experiment!"
     ];
     document.getElementById("funfact").textContent =
-      facts[Math.floor(Math.random()*facts.length)];
+      facts[Math.floor(Math.random() * facts.length)];
 
-    setTimeout(()=>{
+    setTimeout(() => {
       document.getElementById("warning").classList.add("fade-out");
-      setTimeout(()=> window.location.href="game.html", 1500);
+      setTimeout(() => window.location.href = "game.html", 1500);
     }, 3000);
   </script>
 </body>
