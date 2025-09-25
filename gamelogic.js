@@ -24,6 +24,8 @@ const imgs = {
   peaShooter: load("./pea.png"),
   wallnut: load("./wallnut.png"),
   zombie: load("./zombie.png"),
+  peanut: load("./peanut.png"),
+
 
   peaShooter_pink: load("./peaShooter_pink.png"),
   peaShooter_green: load("./peaShooter_green.png"),
@@ -39,6 +41,7 @@ const imgs = {
 
   // styled packets
   peaShooter_packet: load("./peaShooter_packet.png"),
+  peanut_packet: load("./peanut_packet.png"),
   peaShooter_packet_pink: load("./peaShooter_packet_pink.png"),
   peaShooter_packet_green: load("./peaShooter_packet_green.png"),
   peaShooter_packet_3d: load("./peaShooter_packet_3d.png"),
@@ -68,6 +71,7 @@ const imgs = {
   strikehorn: load("./strikehorn.png"),
   scratchbuster: load("./scratchbuster.png"),
   quillerqueen: load("./quillerqueen.png"),
+  
   // zombies
   cone: load("./cone.png"),
   bucket: load("./bucket.png"),
@@ -138,6 +142,7 @@ const seeds = [
   { type: "cone", packet: "cone_packet" },
   { type: "bucket", packet: "bucket_packet" },
   { type: "imp", packet: "imp_packet" },
+  { type: "peanut", packet: "peanut_packet" },
   { type: "delete", packet: "delete_packet" }
 ];
 
@@ -184,6 +189,7 @@ function spawn(type, x, y) {
   if (type === "scratchbuster") e.hp = 250;
   if (type === "quillerqueen") e.hp = 300;
   if (type === "bombtater") { e.hp = 150; e.armed = true; e.uses = 3; }
+  if (type === "peanut") e.hp = 400;
   if (type === "lobProj") e.vy = -250;
   entities.push(e);
 }
@@ -223,6 +229,23 @@ function update(dt) {
         if (!z.dead && Math.abs(z.x - e.x) < 30 && Math.abs(z.y - e.y) < 40) { spawn("boom", e.x, e.y); z.hp -= 150; e.dead = true; }
       }
     }
+if (e.type === "peanut" && e.t >= 2) {
+  const laneAbove = entities.some(z =>
+    ["zombie","cone","bucket","imp"].includes(z.type) &&
+    !z.dead && !z.mirrored &&
+    Math.abs(z.y - (e.y - 80)) < 30
+  );
+  const laneBelow = entities.some(z =>
+    ["zombie","cone","bucket","imp"].includes(z.type) &&
+    !z.dead && !z.mirrored &&
+    Math.abs(z.y - (e.y + 80)) < 30
+  );
+  if (laneAbove || laneBelow) {
+    e.t = 0;
+    if (laneAbove) spawn("pea", e.x + 20, e.y - 80);
+    if (laneBelow) spawn("pea", e.x + 20, e.y + 80);
+  }
+}
 
     // zombies
     if (["zombie", "cone", "bucket", "imp"].includes(e.type)) {

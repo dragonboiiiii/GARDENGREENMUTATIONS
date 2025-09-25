@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Garden Greens Mutated - Warning</title>
+  <title>Garden Greens Mutated - Title</title>
   <style>
     body, html {
       margin: 0;
@@ -10,14 +10,9 @@
       width: 100%;
       height: 100%;
       overflow: hidden;
-      display: flex;
-      align-items: center;
-      justify-content: center;
       font-family: Arial, sans-serif;
-      background: url("loadingScreen_boot.png") no-repeat center center fixed;
-      background-size: cover;
     }
-    #warning {
+    #titlescreen, #warning {
       position: absolute;
       top: 0;
       left: 0;
@@ -27,25 +22,74 @@
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      color: white;
-      font-size: 20px;
-      text-align: center;
+    }
+   #titlescreen {
+  background: url("titlescreen.png") no-repeat center center fixed;
+  background-size: cover;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end; /* push contents to the bottom */
+  padding-bottom: 60px;      /* space from bottom edge */
+}
+
+#startbtn {
+  background: linear-gradient(to bottom, #4CAF50, #2E7D32);
+  border: none;
+  border-radius: 12px;
+  padding: 20px 60px;
+  font-size: 24px;
+  font-weight: bold;
+  color: white;
+  cursor: pointer;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.4);
+  transition: transform 0.2s;
+}
+#startbtn:hover {
+  transform: scale(1.05);
+}
+
+    #warning {
       background: rgba(0,0,0,0.6);
       backdrop-filter: blur(10px);
       -webkit-backdrop-filter: blur(10px);
+      display: none;
+      color: white;
+      text-align: center;
+      font-size: 20px;
     }
-    #warning img {
-      width: 64px;
-      height: 64px;
-      margin-bottom: 20px;
-    }
-    #warning.fade-out {
-      opacity: 0;
-      transition: opacity 1.5s ease-out;
-    }
+    #warning {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: none; /* hidden until START */
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  text-align: center;
+  font-size: 20px;
+
+  /* 🔥 bring back the background */
+  background: url("loadingScreen_boot.png") no-repeat center center fixed;
+  background-size: cover;
+
+  /* blur effect */
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
   </style>
 </head>
 <body>
+  <!-- Title screen -->
+  <div id="titlescreen">
+    <button id="startbtn">START</button>
+  </div>
+
+  <!-- Warning screen -->
   <div id="warning">
     <img src="loading.gif" alt="Loading...">
     <p><strong>WARNING:</strong><br>
@@ -56,35 +100,36 @@
   </div>
 
   <!-- 🔊 loading sound -->
-  <audio id="loadsound" src="./loading.wav" autoplay></audio>
+  <audio id="loadsound" src="./loading.wav"></audio>
 
   <script>
-    // ensure sound starts once the page is ready
-    window.addEventListener("load", () => {
-      const loadSound = document.getElementById("loadsound");
-      loadSound.volume = 1.0;
-      loadSound.play().catch(() => {
-        // if autoplay blocked, play after first click anywhere
-        document.body.addEventListener("click", () => {
-          loadSound.play();
-        }, { once: true });
+    const titlescreen = document.getElementById("titlescreen");
+    const warning = document.getElementById("warning");
+    const loadSound = document.getElementById("loadsound");
+
+    document.getElementById("startbtn").onclick = () => {
+      titlescreen.style.display = "none";
+      warning.style.display = "flex";
+
+      loadSound.play().catch(()=>{
+        document.body.addEventListener("click", ()=>loadSound.play(), {once:true});
       });
-    });
 
-    const facts = [
-      "Fun Fact: Solar Pea shoots peas that also generate sunlight!",
-      "Fun Fact: Bombtater can explode multiple times before vanishing.",
-      "Fun Fact: Hazelnut only grows in the alternate background (bg2).",
-      "Fun Fact: Cabbarage is a tougher version of Beatchoy with extra punch power.",
-      "Fun Fact: Garden Greens Mutated started as a sandbox fangame experiment!"
-    ];
-    document.getElementById("funfact").textContent =
-      facts[Math.floor(Math.random() * facts.length)];
+      const facts = [
+        "Fun Fact: Solar Pea shoots peas that also generate sunlight!",
+        "Fun Fact: Bombtater can explode multiple times before vanishing.",
+        "Fun Fact: Hazelnut only grows in the alternate background (bg2).",
+        "Fun Fact: Cabbarage is a tougher version of Beatchoy with extra punch power.",
+        "Fun Fact: Garden Greens Mutated started as a sandbox fangame experiment!"
+      ];
+      document.getElementById("funfact").textContent =
+        facts[Math.floor(Math.random()*facts.length)];
 
-    setTimeout(() => {
-      document.getElementById("warning").classList.add("fade-out");
-      setTimeout(() => window.location.href = "game.html", 1500);
-    }, 3000);
+      setTimeout(() => {
+        warning.classList.add("fade-out");
+        setTimeout(() => window.location.href = "game.html", 1500);
+      }, 3000);
+    };
   </script>
 </body>
 </html>
