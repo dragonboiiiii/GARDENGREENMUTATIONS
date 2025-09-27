@@ -4,89 +4,162 @@
   <meta charset="UTF-8">
   <title>Garden Greens Mutated - Title</title>
   <style>
+    @font-face {
+      font-family: 'Cafeteria';
+      src: url('Cafeteria.ttf') format('truetype');
+    }
+
     body, html {
       margin: 0;
       padding: 0;
       width: 100%;
       height: 100%;
       overflow: hidden;
-      font-family: Arial, sans-serif;
+      font-family: 'Cafeteria', Arial, sans-serif;
     }
+
     #titlescreen, #warning {
       position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
       display: flex;
       flex-direction: column;
       align-items: center;
+      justify-content: flex-end;
+    }
+
+    #titlescreen {
+      background: url("titlescreen.png") no-repeat center center fixed;
+      background-size: cover;
+    }
+
+    /* START button container */
+    #start-container {
+      position: absolute;
+      bottom: 60px;
+      left: 50%;
+      transform: translateX(-50%);
+    }
+
+    #startbtn {
+      position: relative;
+      background: none;
+      border: none;
+      padding: 0;
+      cursor: pointer;
+    }
+    #startbtn img {
+      width: 240px;
+      height: auto;
+    }
+    #startbtn .start-text {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      color: white;
+      font-size: 28px;
+      font-weight: bold;
+      pointer-events: none;
+      font-family: 'Cafeteria', Arial, sans-serif;
+    }
+
+    /* Side buttons */
+    .sidebtn {
+      position: absolute;
+      background: linear-gradient(to bottom, #795548, #5D4037);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      padding: 12px 24px;
+      font-size: 16px;
+      font-weight: bold;
+      cursor: pointer;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.4);
+      transition: transform 0.2s;
+      font-family: 'Cafeteria', Arial, sans-serif;
+    }
+    .sidebtn:hover {
+      transform: scale(1.05);
+    }
+
+    .leftbtn {
+      top: 20px;
+      left: 20px;
+    }
+    .rightbtn {
+      right: 20px;
+    }
+
+    /* Settings modal */
+    #settingsModal {
+      display: none;
+      position: fixed;
+      top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(0,0,0,0.6);
+      backdrop-filter: blur(6px);
+      -webkit-backdrop-filter: blur(6px);
+      align-items: center;
       justify-content: center;
     }
-   #titlescreen {
-  background: url("titlescreen.png") no-repeat center center fixed;
-  background-size: cover;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: flex-end; /* push contents to the bottom */
-  padding-bottom: 60px;      /* space from bottom edge */
-}
+    #settingsModal .modal-content {
+      background: #222;
+      color: white;
+      padding: 20px 40px;
+      border-radius: 12px;
+      text-align: center;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.6);
+      font-family: 'Cafeteria', Arial, sans-serif;
+    }
+    #settingsModal ul {
+      list-style: none;
+      padding: 0;
+      margin: 15px 0;
+      text-align: left;
+    }
+    #settingsModal li {
+      margin: 6px 0;
+    }
 
-#startbtn {
-  background: linear-gradient(to bottom, #4CAF50, #2E7D32);
-  border: none;
-  border-radius: 12px;
-  padding: 20px 60px;
-  font-size: 24px;
-  font-weight: bold;
-  color: white;
-  cursor: pointer;
-  box-shadow: 0 4px 8px rgba(0,0,0,0.4);
-  transition: transform 0.2s;
-}
-#startbtn:hover {
-  transform: scale(1.05);
-}
-
+    /* Warning screen */
     #warning {
-      background: rgba(0,0,0,0.6);
-      backdrop-filter: blur(10px);
-      -webkit-backdrop-filter: blur(10px);
       display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background: url("loadingScreen_boot.png") no-repeat center center fixed;
+      background-size: cover;
       color: white;
       text-align: center;
       font-size: 20px;
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
     }
-    #warning {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  display: none; /* hidden until START */
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  color: white;
-  text-align: center;
-  font-size: 20px;
-
-  /* 🔥 bring back the background */
-  background: url("loadingScreen_boot.png") no-repeat center center fixed;
-  background-size: cover;
-
-  /* blur effect */
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-}
-
+    #warning img {
+      width: 128px; /* bigger loading gif */
+      height: 128px;
+      margin-bottom: 20px;
+    }
+    #warning.fade-out {
+      opacity: 0;
+      transition: opacity 1.5s ease-out;
+    }
   </style>
 </head>
 <body>
   <!-- Title screen -->
   <div id="titlescreen">
-    <button id="startbtn">START</button>
+    <div id="start-container">
+      <button id="startbtn">
+        <img src="startbtn.png" alt="START">
+        <span class="start-text">START</span>
+      </button>
+    </div>
+
+    <!-- Side buttons -->
+    <button class="sidebtn leftbtn" onclick="clickSound(); window.location.href='newsletter.html'">NEWSLETTER</button>
+    <button class="sidebtn rightbtn" id="settingsbtn" onclick="clickSound()">SETTINGS</button>
+    <button class="sidebtn rightbtn" style="top: 80px;" onclick="clickSound(); window.location.href='log.html'">LOG</button>
   </div>
 
   <!-- Warning screen -->
@@ -99,15 +172,45 @@
     <p id="funfact"></p>
   </div>
 
-  <!-- 🔊 loading sound -->
+  <!-- Settings modal -->
+  <div id="settingsModal">
+    <div class="modal-content">
+      <h2>Settings</h2>
+      <p><strong>Garden Greens Mutated</strong><br>
+      Version: 1.0.0</p>
+      
+      <h3>Credits</h3>
+      <ul>
+        <li><strong>Concept & Design:</strong> Berry Boi  </li>
+        <li><strong>Programming & Engine:</strong> Berry Boi + ChatGPT (HTML5 Canvas + JavaScript)</li>
+        <li><strong>Art & Assets:</strong> Adapted PvZ3 sprites, custom edits by Berry Boi</li>
+        <li><strong>Sound & Music:</strong> PvZ3, datamined by Vi</li>
+        <li><strong>Testing & Balancing:</strong> ChatGPT + My feedback</li>
+        <li><strong>Special Thanks:</strong> PopCap Games & PvZ Community</li>
+      </ul>
+
+      <button class="sidebtn" onclick="closeSettings()">Close</button>
+    </div>
+  </div>
+
+  <!-- 🔊 sounds -->
   <audio id="loadsound" src="./loading.wav"></audio>
+  <audio id="clicksound" src="./click.wav"></audio>
 
   <script>
     const titlescreen = document.getElementById("titlescreen");
     const warning = document.getElementById("warning");
     const loadSound = document.getElementById("loadsound");
+    const clickSfx = document.getElementById("clicksound");
+
+    // helper function for click sound
+    function clickSound() {
+      clickSfx.currentTime = 0;
+      clickSfx.play().catch(()=>{});
+    }
 
     document.getElementById("startbtn").onclick = () => {
+      clickSound();
       titlescreen.style.display = "none";
       warning.style.display = "flex";
 
@@ -130,6 +233,16 @@
         setTimeout(() => window.location.href = "game.html", 1500);
       }, 3000);
     };
+
+    // settings modal toggle
+    const settingsModal = document.getElementById("settingsModal");
+    document.getElementById("settingsbtn").onclick = () => {
+      clickSound();
+      settingsModal.style.display = "flex";
+    };
+    function closeSettings() {
+      settingsModal.style.display = "none";
+    }
   </script>
 </body>
 </html>
